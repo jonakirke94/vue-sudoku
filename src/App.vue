@@ -8,13 +8,21 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import HelloWorld from './components/HelloWorld.vue';
+import Game from './sudoku/Game';
 
 @Component({
   components: {
     HelloWorld,
   },
 })
-export default class App extends Vue {}
+export default class App extends Vue {
+  /* eslint class-methods-use-this: ["error", { "exceptMethods": ["mounted"] }] */
+  mounted() : void {
+    const greeter = new Game('test');
+    greeter.addTiles();
+    console.log(greeter.greeting);
+  }
+}
 </script>
 
 <style>

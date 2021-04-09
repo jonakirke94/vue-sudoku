@@ -15,6 +15,10 @@
     "types": [
       "webpack-env"
     ],
+    "typeRoots": [
+      "node_modules/@types",
+      "src/customTypings/**"
+    ],
     "paths": {
       "@/*": [
         "src/*"
@@ -35,6 +39,6 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
   ]
 }
