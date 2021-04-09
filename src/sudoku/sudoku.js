@@ -20,7 +20,7 @@
     Please see the README for more details.
 */
 
-(function (root) {
+function init(root) {
   const sudoku = root.sudoku = {}; // Global reference to the sudoku library
 
   sudoku.DIGITS = '123456789'; // Allowed sudoku.DIGITS
@@ -804,6 +804,8 @@
   initialize();
 
 // Pass whatever the root object is, lsike 'window' in browsers
-}(this));
+};
 
-export default sudoku;
+const instance = {}
+init(instance);
+export default instance.sudoku;
