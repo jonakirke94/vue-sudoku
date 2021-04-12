@@ -1,7 +1,9 @@
 import Tile from '../models/Tile';
 
 interface AbstractTileFactory {
-    createTile(): Tile;
+	createEditableTile(row: number, column: number): Tile;
+
+	createFrozenTile(value: number, row: number, column: number): Tile;
 }
 
 export default AbstractTileFactory;

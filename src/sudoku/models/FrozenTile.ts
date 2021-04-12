@@ -1,10 +1,5 @@
 import Tile from './Tile';
 
-class FrozenTile extends Tile {
-  constructor() {
-    super();
-    console.log('init frozen tile');
-  }
-}
+class FrozenTile extends Tile {}
 
 export default FrozenTile;

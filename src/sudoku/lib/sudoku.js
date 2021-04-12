@@ -802,8 +802,6 @@ function init(root) {
 
   // Initialize library after load
   initialize();
-
-// Pass whatever the root object is, lsike 'window' in browsers
 };
 
 const instance = {}
