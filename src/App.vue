@@ -1,5 +1,5 @@
 <template>
-	<div id="app" class="w-full flex justify-center">
+	<div id="app" class="w-full flex justify-center" @click="clickedOutsideBoard">
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
@@ -16,10 +16,13 @@
 					<game-tile
 						v-for="tile in tiles"
 						@highlight="highlight"
+						:is-highlighted="highlightedTiles.has(tile.id)"
+						:is-invalid="invalidTiles.has(tile.id)"
 						:key="tile.id.repr"
 						:tile="tile"
-						:selected-tile="selectedTile"
-					></game-tile>
+						:is-selected="selectedTileId === tile.id"
+					>
+					</game-tile>
 				</div>
 			</div>
 
@@ -37,6 +40,8 @@ import Game from './sudoku/Game';
 import Numpad from './components/Numpad.vue';
 import GameTile from './components/GameTile.vue';
 import Tile from './sudoku/models/Tile';
+import UnitGroup from './sudoku/models/UnitGroup';
+import EditableTile from './sudoku/models/EditableTile';
 
 @Component({
 	components: {
@@ -47,52 +52,83 @@ import Tile from './sudoku/models/Tile';
 export default class App extends Vue {
 	private game!: Game;
 
-	private tiles: Tile[] = [];
-
-	private selectedTile: Tile | null = null;
-
 	private board: Tile[][] = [];
+
+	private highlightedTiles: Set<string> = new Set();
+
+	private invalidTiles: Set<string> = new Set();
+
+	private selectedTileId = '';
 
 	created(): void {
 		this.game = new Game();
-
-		this.game.on('refresh', this.refresh);
-
-		this.board = this.game.createBoard();
-		this.tiles = this.board.flat();
+		this.board = this.game.createBoard(this.valueChangedCb);
 	}
 
 	mounted(): void {
 		window.addEventListener('keypress', this.captureKey);
 	}
 
-	public initGame(): void {
-		this.game.createBoard();
+	beforeDestroyed(): void {
+		window.removeEventListener('keypress', this.captureKey);
 	}
 
-	private refresh(): void {
-		this.tiles = this.game.flatTiles;
+	get tiles(): Tile[] {
+		return this.board.flat();
+	}
+
+	get tilesMap(): Map<string, Tile> {
+		const map = new Map<string, Tile>();
+		this.board.flat().forEach((tile) => {
+			map.set(tile.id, tile);
+		});
+
+		return map;
+	}
+
+	public valueChangedCb(tile: Tile): void {
+		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
+
+		const invalidRows = unitGroup.validate();
+
+		// merge with invalid tiles
+		for (const key of invalidRows.keys()) {
+			if (invalidRows.get(key)) {
+				this.invalidTiles.delete(key);
+			} else {
+				this.invalidTiles.add(key);
+			}
+		}
+
+		// we need to do this because vue2 doesn't have reactivity on sets/maps
+		this.invalidTiles = new Set(this.invalidTiles);
+	}
+
+	public clickedOutsideBoard(): void {
+		this.selectedTileId = '';
+		this.highlightedTiles = new Set();
 	}
 
 	public highlight(tile: Tile): void {
-		this.game.highlight(tile.location);
-		this.selectedTile = tile;
+		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
+
+		this.highlightedTiles = new Set(unitGroup.tiles.map((x) => x.id));
+		this.selectedTileId = tile.id;
 	}
 
 	public captureKey(e: KeyboardEvent): void {
 		if (/^[1-9]$/i.test(e.key)) {
-			if (this.selectedTile) {
-				this.setValue(Number(e.key));
+			if (this.selectedTileId) {
+				this.setTileValue(Number(e.key));
 			}
 		}
 	}
 
-	public setValue(num: number): void {
-		console.log(num);
-	}
-
-	beforeDestroyed(): void {
-		this.game.off('refresh', this.refresh);
+	public setTileValue(num: number): void {
+		const tileToUpdate = this.tilesMap.get(this.selectedTileId);
+		if (tileToUpdate instanceof EditableTile) {
+			(tileToUpdate as EditableTile).value = num;
+		}
 	}
 }
 </script>

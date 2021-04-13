@@ -4,7 +4,7 @@ import Location from './Location';
 class Tile {
 	id: string;
 
-	value: number;
+	protected _value: number;
 
 	row: number;
 
@@ -12,14 +12,20 @@ class Tile {
 
 	location: Location;
 
-	isHighlighted = false;
+	get value(): number {
+		return this._value;
+	}
 
 	constructor(col: number, row: number, value = 0) {
 		this.id = uuidv4();
-		this.value = value;
+		this._value = value;
 		this.row = row;
 		this.col = col;
 		this.location = new Location(row, col);
+	}
+
+	get hasValue(): boolean {
+		return this._value > 0;
 	}
 }
 

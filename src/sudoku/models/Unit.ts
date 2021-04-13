@@ -1,4 +1,5 @@
 import Tile from './Tile';
+import ValidationResult from './ValidationResult';
 
 class Unit {
 	tiles: Tile[];
@@ -7,14 +8,18 @@ class Unit {
 		this.tiles = tiles;
 	}
 
-	public addTile(tile: Tile): void {
-		this.tiles.push(tile);
-	}
-
-	public highlightUnit(): void {
+	public validate(): ValidationResult[] {
+		const res: ValidationResult[] = [];
 		this.tiles.forEach((t) => {
-			t.isHighlighted = true;
+			if (t.hasValue) {
+				const valid = this.tiles.filter((x) => x.value === t.value).length === 1;
+				res.push(new ValidationResult(t.id, valid));
+			}
+
+			res.push(new ValidationResult(t.id, true));
 		});
+
+		return res;
 	}
 }
 
