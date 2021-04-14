@@ -7,8 +7,8 @@ class MyEventEmitter extends EventTarget {
 		this.removeEventListener(target, callback);
 	}
 
-	emit(target: string): void {
-		this.dispatchEvent(new Event(target));
+	emit(target: string, value: string): void {
+		this.dispatchEvent(new CustomEvent(target, { detail: value }));
 	}
 }
 

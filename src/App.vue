@@ -3,6 +3,8 @@
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
+			<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
+
 			<div class="relative flex-shrink-0">
 				<board-overlay></board-overlay>
 
@@ -20,17 +22,27 @@
 				</div>
 			</div>
 
-			<button class="w-32 h-32" @click="undo" :class="[gameHistory.length ? 'bg-indigo-600' : 'bg-gray-500']">
-				Undo
-			</button>
+			<div class="flex space-x-4 my-4">
+				<button
+					class="w-20 h-14 rounded-md"
+					@click="undo"
+					:class="[gameHistory.length ? 'bg-indigo-600' : 'bg-gray-200']"
+				>
+					Undo
+				</button>
 
-			<button class="w-32 h-32" @click="deleteVal" :class="[selectedTileId ? 'bg-red-600' : 'bg-gray-500']">
-				Erase
-			</button>
+				<button
+					class="w-20 h-14 rounded-md"
+					@click="deleteVal"
+					:class="[selectedTileId ? 'bg-red-600' : 'bg-gray-200']"
+				>
+					Erase
+				</button>
+			</div>
 
-			<!-- 	<div class="grid grid-cols-3 grid-rows-3 w-96 mt-96">
-				<numpad v-for="x in 9" :key="x" :num="x"></numpad>
-			</div> -->
+			<ul class="flex space-x-1">
+				<numpad v-for="x in 9" :key="x" :num="x" @click.native="numpadClicked(x)"></numpad>
+			</ul>
 		</div>
 	</div>
 </template>
@@ -42,10 +54,13 @@ import Game from './sudoku/Game';
 import Numpad from './components/Numpad.vue';
 import GameTile from './components/GameTile.vue';
 import BoardOverlay from './components/BoardOverlay.vue';
+import Timer from './components/Timer.vue';
 import Tile from './sudoku/models/Tile';
 import UnitGroup from './sudoku/models/UnitGroup';
 import EditableTile from './sudoku/models/EditableTile';
 import Command from './sudoku/models/Command';
+
+import Clock from './sudoku/models/Timer';
 
 import { SENTINEL } from './sudoku/constants';
 
@@ -54,6 +69,7 @@ import { SENTINEL } from './sudoku/constants';
 		Numpad,
 		GameTile,
 		BoardOverlay,
+		Timer,
 	},
 })
 export default class App extends Vue {
@@ -69,9 +85,20 @@ export default class App extends Vue {
 
 	private gameHistory: Command[] = [];
 
+	private clock: Clock;
+
+	private running = true;
+
+	private time = '00:00';
+
 	created(): void {
 		this.game = new Game();
 		this.board = this.game.createBoard(this.valueChangedCb);
+		this.clock = new Clock();
+
+		this.clock.on('tick', (evt) => {
+			this.time = (evt as CustomEvent).detail;
+		});
 	}
 
 	mounted(): void {
@@ -153,6 +180,12 @@ export default class App extends Vue {
 
 	public addValue(id: string, val: number): void {
 		const tile = this.tilesMap.get(id);
+
+		if (tile?.value === val) {
+			// don't set same value
+			return;
+		}
+
 		if (tile instanceof EditableTile) {
 			const command = new Command(tile, val, tile.value);
 			this.gameHistory.push(command);
@@ -160,8 +193,24 @@ export default class App extends Vue {
 		}
 	}
 
+	public numpadClicked(val: number): void {
+		if (this.selectedTileId) {
+			this.addValue(this.selectedTileId, val);
+		}
+	}
+
 	public deleteVal(): void {
 		this.addValue(this.selectedTileId, SENTINEL);
+	}
+
+	public start(): void {
+		this.running = true;
+		this.clock.start();
+	}
+
+	public pause(): void {
+		this.clock.pause();
+		this.running = false;
 	}
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-	<div class="p-8 border border-gray-700" @click="print">
+	<div class="w-14 h-14 flex justify-center items-center rounded-md bg-gray-100" @click="print">
 		{{ num }}
 	</div>
 </template>
