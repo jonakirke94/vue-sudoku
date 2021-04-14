@@ -4,13 +4,7 @@
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
 			<div class="relative flex-shrink-0">
-				<div class="grid grid-cols-3 border border-b-0 border-r-0 border-gray-500 absolute inset-0 pointer-events-none">
-					<div
-						class="h-48 w-48 block flex-shrink-0 border-b border-r bg-transparent border-gray-700"
-						v-for="x in 9"
-						:key="x"
-					></div>
-				</div>
+				<board-overlay></board-overlay>
 
 				<div class="grid grid-cols-9 grid-rows-9">
 					<game-tile
@@ -26,6 +20,14 @@
 				</div>
 			</div>
 
+			<button class="w-32 h-32" @click="undo" :class="[gameHistory.length ? 'bg-indigo-600' : 'bg-gray-500']">
+				Undo
+			</button>
+
+			<button class="w-32 h-32" @click="deleteVal" :class="[selectedTileId ? 'bg-red-600' : 'bg-gray-500']">
+				Erase
+			</button>
+
 			<!-- 	<div class="grid grid-cols-3 grid-rows-3 w-96 mt-96">
 				<numpad v-for="x in 9" :key="x" :num="x"></numpad>
 			</div> -->
@@ -39,14 +41,19 @@ import Game from './sudoku/Game';
 
 import Numpad from './components/Numpad.vue';
 import GameTile from './components/GameTile.vue';
+import BoardOverlay from './components/BoardOverlay.vue';
 import Tile from './sudoku/models/Tile';
 import UnitGroup from './sudoku/models/UnitGroup';
 import EditableTile from './sudoku/models/EditableTile';
+import Command from './sudoku/models/Command';
+
+import { SENTINEL } from './sudoku/constants';
 
 @Component({
 	components: {
 		Numpad,
 		GameTile,
+		BoardOverlay,
 	},
 })
 export default class App extends Vue {
@@ -59,6 +66,8 @@ export default class App extends Vue {
 	private invalidTiles: Set<string> = new Set();
 
 	private selectedTileId = '';
+
+	private gameHistory: Command[] = [];
 
 	created(): void {
 		this.game = new Game();
@@ -86,6 +95,15 @@ export default class App extends Vue {
 		return map;
 	}
 
+	public undo(): void {
+		console.log('undo');
+		const command = this.gameHistory.pop();
+
+		if (command) {
+			command.revert();
+		}
+	}
+
 	public valueChangedCb(tile: Tile): void {
 		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
 
@@ -105,11 +123,20 @@ export default class App extends Vue {
 	}
 
 	public clickedOutsideBoard(): void {
-		this.selectedTileId = '';
-		this.highlightedTiles = new Set();
+		// console.log('clicked outside board');
+		// this.selectedTileId = '';
+		// this.highlightedTiles = new Set();
 	}
 
 	public highlight(tile: Tile): void {
+		// toggle highlight
+		if (this.selectedTileId === tile.id) {
+			this.highlightedTiles = new Set();
+			this.selectedTileId = '';
+			return;
+		}
+
+		console.log('in highlight');
 		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
 
 		this.highlightedTiles = new Set(unitGroup.tiles.map((x) => x.id));
@@ -119,16 +146,22 @@ export default class App extends Vue {
 	public captureKey(e: KeyboardEvent): void {
 		if (/^[1-9]$/i.test(e.key)) {
 			if (this.selectedTileId) {
-				this.setTileValue(Number(e.key));
+				this.addValue(this.selectedTileId, Number(e.key));
 			}
 		}
 	}
 
-	public setTileValue(num: number): void {
-		const tileToUpdate = this.tilesMap.get(this.selectedTileId);
-		if (tileToUpdate instanceof EditableTile) {
-			(tileToUpdate as EditableTile).value = num;
+	public addValue(id: string, val: number): void {
+		const tile = this.tilesMap.get(id);
+		if (tile instanceof EditableTile) {
+			const command = new Command(tile, val, tile.value);
+			this.gameHistory.push(command);
+			command.execute();
 		}
+	}
+
+	public deleteVal(): void {
+		this.addValue(this.selectedTileId, SENTINEL);
 	}
 }
 </script>

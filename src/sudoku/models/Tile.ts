@@ -1,6 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import Location from './Location';
 
+import { SENTINEL } from '../constants';
+
 class Tile {
 	id: string;
 
@@ -16,7 +18,7 @@ class Tile {
 		return this._value;
 	}
 
-	constructor(col: number, row: number, value = 0) {
+	constructor(col: number, row: number, value = SENTINEL) {
 		this.id = uuidv4();
 		this._value = value;
 		this.row = row;
@@ -25,7 +27,7 @@ class Tile {
 	}
 
 	get hasValue(): boolean {
-		return this._value > 0;
+		return this._value !== SENTINEL;
 	}
 }
 

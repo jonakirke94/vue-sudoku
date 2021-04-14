@@ -21,7 +21,10 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 
 @Component
 export default class GameTile extends Vue {
-	@Prop() tile!: Tile;
+	@Prop({
+		required: true,
+	})
+	tile: Tile;
 
 	@Prop() isSelected: boolean;
 
@@ -29,12 +32,14 @@ export default class GameTile extends Vue {
 
 	@Prop() isInvalid: boolean;
 
-	public highlightTile(): void {
-		this.$emit('highlight', this.tile);
+	private isFrozen = false;
+
+	created(): void {
+		this.isFrozen = this.tile instanceof FrozenTile;
 	}
 
-	get isFrozen(): boolean {
-		return this.tile instanceof FrozenTile;
+	public highlightTile(): void {
+		this.$emit('highlight', this.tile);
 	}
 }
 </script>
