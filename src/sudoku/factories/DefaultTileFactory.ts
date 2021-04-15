@@ -3,7 +3,7 @@ import FrozenTile from '../models/FrozenTile';
 import Tile from '../models/Tile';
 import AbstractTileFactory from './AbstractTileFactory';
 
-import TileValueCallback from '../models/TileValueCallback';
+import TileValueCallback from '../types/TileValueCallback';
 
 export default class DefaultTileFactory implements AbstractTileFactory {
 	public createEditableTile(col: number, row: number, cb: TileValueCallback): Tile {

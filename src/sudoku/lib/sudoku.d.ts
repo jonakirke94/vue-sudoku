@@ -2,7 +2,7 @@
 import Difficulty from '../models/Difficulty';
 
 interface Sudoku {
-	generate(puzzle: Difficulty): string;
+	generate(difficulty: string): string;
 	board_string_to_grid(board_string: string): [][];
 }
 

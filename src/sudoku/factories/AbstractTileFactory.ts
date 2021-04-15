@@ -1,6 +1,6 @@
 import Tile from '../models/Tile';
 
-import TileValueCallback from '../models/TileValueCallback';
+import TileValueCallback from '../types/TileValueCallback';
 
 interface AbstractTileFactory {
 	createEditableTile(row: number, column: number, cb: TileValueCallback): Tile;

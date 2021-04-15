@@ -4,12 +4,15 @@ import Difficulty from './models/Difficulty';
 
 import Sudoku from './lib/sudoku';
 import DefaultTileFactory from './factories/DefaultTileFactory';
-import Validator from './models/Validator';
 
-import TileValueCallback from './models/TileValueCallback';
+import TileValueCallback from './types/TileValueCallback';
+import Memento from './models/Memento';
+import Validator from './models/Validator';
 
 class Game {
 	tileFactory: AbstractTileFactory;
+
+	memento: Memento;
 
 	validator: Validator;
 
@@ -18,10 +21,10 @@ class Game {
 		this.validator = new Validator();
 	}
 
-	createBoard(tileValueCb: TileValueCallback): Tile[][] {
-		const test = Sudoku.generate(Difficulty.easy);
+	createBoard(tileValueCb: TileValueCallback, difficulty: Difficulty): Tile[][] {
+		const generatedGame = Sudoku.generate(Difficulty[difficulty]);
 
-		const grid = Sudoku.board_string_to_grid(test);
+		const grid = Sudoku.board_string_to_grid(generatedGame);
 
 		const board: Tile[][] = [];
 
@@ -40,6 +43,8 @@ class Game {
 
 			board.push(intRow);
 		});
+
+		this.memento = new Memento(board);
 
 		return board;
 	}

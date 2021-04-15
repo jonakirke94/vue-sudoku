@@ -1,4 +1,4 @@
-import Tile from './Tile';
+import Tile from '../models/Tile';
 
 type TileValueCallback = (tile: Tile) => void;
 
