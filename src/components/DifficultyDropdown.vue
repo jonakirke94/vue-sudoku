@@ -5,7 +5,7 @@
 		</div>
 
 		<ul slot="menu" class="w-48">
-			<li class="option" v-for="opt in options" :key="opt.label" @click="$emit('selected', opt.value)">
+			<li class="option" v-for="opt in options" :key="opt.value" @click="$emit('selected', opt.value)">
 				{{ opt.label }}
 			</li>
 		</ul>
@@ -57,7 +57,7 @@ export default class DifficultyDropdown extends Vue {
 	}
 
 	get selectedKey(): string {
-		return Difficulty[this.selected];
+		return this.options.find((x) => x.value === this.selected).label;
 	}
 }
 </script>

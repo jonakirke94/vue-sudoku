@@ -3,57 +3,48 @@
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
-			<winning-component v-if="hasWon"></winning-component>
-
-			<div class="flex justify-between">
-				<difficulty-dropdown :selected="difficulty" @selected="setDifficulty($event)"></difficulty-dropdown>
-				<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
-			</div>
-
 			<div class="flex">
-				<div class="relative flex flex-shrink-0">
-					<board-overlay :paused="!running" @start="start"></board-overlay>
+				<div class="flex flex-col justify-center">
+					<div class="flex justify-between items-center">
+						<difficulty-dropdown :selected="difficulty" @selected="setDifficulty($event)"></difficulty-dropdown>
+						<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
+					</div>
 
-					<div class="grid grid-cols-9 grid-rows-9">
-						<game-tile
-							v-for="tile in tiles"
-							@highlight="highlight"
-							:is-highlighted="highlightedTiles.has(tile.id)"
-							:is-invalid="invalidTiles.has(tile.id)"
-							:key="tile.id"
-							:tile="tile"
-							:is-selected="selectedTileId === tile.id"
-						>
-						</game-tile>
+					<div class="flex flex-shrink-0">
+						<div class="relative grid grid-cols-9 grid-rows-9">
+							<board-overlay :paused="!running" @start="start"></board-overlay>
+							<game-tile
+								v-for="(tile, index) in tiles"
+								:class="[
+									{ 'rounded-tl-md': index === 0 },
+									{ 'rounded-tr-md': index === 8 },
+									{ 'rounded-bl-md': index === 72 },
+									{ 'rounded-br-md': index === 80 },
+								]"
+								@highlight="highlight"
+								:is-highlighted="highlightedTiles.has(tile.id)"
+								:is-invalid="invalidTiles.has(tile.id)"
+								:key="tile.id"
+								:tile="tile"
+								:is-selected="selectedTileId === tile.id"
+							>
+							</game-tile>
+						</div>
+
+						<div class="flex flex-col ml-4">
+							<base-button @click="reset">Reset</base-button>
+							<base-button @click="newGame" class="mt-4">New Game</base-button>
+
+							<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
+							<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteVal" class="mt-4"
+								>Erase</base-button
+							>
+						</div>
 					</div>
 				</div>
-
-				<div class="flex flex-col space-y-4 ml-4">
-					<button
-						:disabled="hasWon"
-						class="w-32 h-14 rounded-md text-white"
-						@click="undo"
-						:class="[gameHistory.length ? 'bg-indigo-600' : 'bg-gray-200']"
-					>
-						Undo
-					</button>
-
-					<button
-						:disabled="hasWon"
-						class="w-32 h-14 rounded-md text-white"
-						@click="deleteVal"
-						:class="[selectedTileId ? 'bg-red-600' : 'bg-gray-200']"
-					>
-						Erase
-					</button>
-
-					<button class="w-32 h-14 rounded-md bg-indigo-400 text-white" @click="reset">Reset</button>
-
-					<button class="w-32 h-14 rounded-md bg-indigo-400 text-white" @click="newGame">New Game</button>
-				</div>
 			</div>
 
-			<ul class="flex space-x-1">
+			<ul class="flex space-x-1.5 mt-4">
 				<numpad v-for="x in 9" :key="x" :num="x" @click.native="numpadClicked(x)" :disabled="hasWon"></numpad>
 			</ul>
 		</div>
@@ -65,8 +56,8 @@ import { Component, Vue } from 'vue-property-decorator';
 import Game from './sudoku/Game';
 
 import Numpad from './components/Numpad.vue';
-import WinningComponent from './components/WinningComponent.vue';
 import DifficultyDropdown from './components/DifficultyDropdown.vue';
+import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
 import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
@@ -79,6 +70,7 @@ import Clock from './sudoku/models/Timer';
 
 import { SENTINEL } from './sudoku/constants';
 import Difficulty from './sudoku/models/Difficulty';
+import FrozenTile from './sudoku/models/FrozenTile';
 
 @Component({
 	components: {
@@ -87,7 +79,7 @@ import Difficulty from './sudoku/models/Difficulty';
 		BoardOverlay,
 		Timer,
 		DifficultyDropdown,
-		WinningComponent,
+		BaseButton,
 	},
 })
 export default class App extends Vue {
@@ -145,6 +137,18 @@ export default class App extends Vue {
 		return map;
 	}
 
+	get currentTileHasValue(): boolean {
+		if (this.selectedTileId && this.tilesMap.has(this.selectedTileId)) {
+			const tile = this.tilesMap.get(this.selectedTileId);
+
+			if (!tile || tile instanceof FrozenTile) return false;
+
+			return tile.hasValue;
+		}
+
+		return false;
+	}
+
 	public undo(): void {
 		const command = this.gameHistory.pop();
 
@@ -176,16 +180,17 @@ export default class App extends Vue {
 	public checkIfWon(): void {
 		const hasWon = this.tiles.every((tile) => tile.hasValue) && this.invalidTiles.size === 0;
 
-		this.hasWon = true;
-
 		if (hasWon) {
+			this.clock.dispose();
 			this.hasWon = true;
-			console.log('The user has won!!!');
+
+			setTimeout(() => {
+				alert('Tillykke!');
+			}, 200);
 		}
 	}
 
 	public highlight(tile: Tile): void {
-		// toggle highlight
 		if (this.selectedTileId === tile.id) {
 			this.highlightedTiles = new Set();
 			this.selectedTileId = '';
@@ -194,7 +199,11 @@ export default class App extends Vue {
 
 		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
 
-		this.highlightedTiles = new Set(unitGroup.tiles.map((x) => x.id));
+		const sameNumbers = this.tiles.filter((t) => t.value === tile.value && tile.hasValue);
+
+		const toHighlight = [...sameNumbers.map((x) => x.id), ...unitGroup.tiles.map((x) => x.id)];
+
+		this.highlightedTiles = new Set(toHighlight);
 		this.selectedTileId = tile.id;
 	}
 

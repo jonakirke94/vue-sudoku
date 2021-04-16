@@ -3,8 +3,8 @@
 		class="border border-gray-300 text-xl w-16 h-16 flex justify-center items-center"
 		@click.stop="highlightTile"
 		:class="[
-			isFrozen ? 'text-gray-900' : 'text-gray-500',
-			{ 'bg-indigo-100': isSelected },
+			isFrozen ? 'text-teal-900' : 'text-gray-500',
+			{ 'bg-teal-100': isSelected },
 			isHighlighted ? 'bg-gray-200' : 'bg-gray-100',
 		]"
 	>

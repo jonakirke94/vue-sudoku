@@ -1,6 +1,8 @@
 <template>
 	<div
 		class="relative inline-block text-left"
+		tabindex="0"
+		@keydown.esc="clickOpen = false"
 		@click.stop="clickOpen = !clickOpen"
 		@mouseenter="setHoverOpen"
 		@mouseleave="setHoverClose"

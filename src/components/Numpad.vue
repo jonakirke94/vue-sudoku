@@ -1,6 +1,6 @@
 <template>
 	<button
-		class="w-14 h-14 flex justify-center items-center rounded-md bg-gray-100"
+		class="w-14 h-14 flex justify-center items-center rounded-md font-bold text-gray-700 border border-teal-600 bg-teal-50 focus:outline-none"
 		:disabled="disabled"
 		:class="{ 'cursor-default': disabled }"
 	>

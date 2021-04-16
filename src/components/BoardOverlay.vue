@@ -1,11 +1,17 @@
 <template>
 	<div
-		class="grid grid-cols-3 border border-b-0 border-r-0 border-gray-700 absolute inset-0 transition-all duration-100"
+		class="grid grid-cols-3 border-gray-700 absolute inset-0 transition-all duration-100"
 		:class="[paused ? 'bg-white' : 'pointer-events-none']"
 	>
 		<div
-			class="h-48 w-48 block flex-shrink-0 border-b border-r bg-transparent border-gray-700"
-			:class="[paused ? 'blur-2xl opacity-80 border-transparent' : '']"
+			class="h-48 w-48 block flex-shrink-0 bg-transparent border-gray-700"
+			:class="[
+				paused ? 'blur-2xl opacity-80 border-transparent' : '',
+				{
+					'border-r': [1, 2, 4, 5, 7, 8].includes(x),
+					'border-b': x <= 6,
+				},
+			]"
 			v-for="x in 9"
 			:key="x"
 		></div>

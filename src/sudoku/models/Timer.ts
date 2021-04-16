@@ -27,7 +27,7 @@ export default class Timer extends MyEventEmitter implements IDisposable {
 		this.startTime = Date.now();
 		this.timerFunction = setInterval(() => {
 			this.intrementor();
-		}, 500);
+		}, 300);
 	}
 
 	public pause(): void {
