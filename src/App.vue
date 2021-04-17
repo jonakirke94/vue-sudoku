@@ -179,6 +179,7 @@ export default class App extends Vue {
 			this.hasWon = true;
 
 			setTimeout(() => {
+				// eslint-disable-next-line no-alert
 				alert('Tillykke!');
 			}, 200);
 		}

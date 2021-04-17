@@ -18,6 +18,8 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 
 import Dropdown from './Dropdown.vue';
 
+import DropdownOption from '../sudoku/models/DropdownOption';
+
 @Component({
 	components: {
 		Dropdown,
@@ -27,37 +29,24 @@ export default class DifficultyDropdown extends Vue {
 	@Prop()
 	selected: Difficulty;
 
-	get options(): any[] {
+	get options(): DropdownOption[] {
 		return [
-			{
-				label: 'Easy',
-				value: Difficulty.easy,
-			},
-			{
-				label: 'Medium',
-				value: Difficulty.medium,
-			},
-			{
-				label: 'Hard',
-				value: Difficulty.hard,
-			},
-			{
-				label: 'Very hard',
-				value: Difficulty['very-hard'],
-			},
-			{
-				label: 'Insane',
-				value: Difficulty.insane,
-			},
-			{
-				label: 'Inhuman',
-				value: Difficulty.inhuman,
-			},
+			new DropdownOption('Easy', Difficulty.easy),
+			new DropdownOption('Medium', Difficulty.medium),
+			new DropdownOption('Very hard', Difficulty.hard),
+			new DropdownOption('Insane', Difficulty['very-hard']),
+			new DropdownOption('Inhuman', Difficulty.inhuman),
 		];
 	}
 
 	get selectedKey(): string {
-		return this.options.find((x) => x.value === this.selected).label;
+		const val = this.options.find((x) => x.value === this.selected);
+
+		if (val) {
+			return val.label;
+		}
+
+		return '';
 	}
 }
 </script>

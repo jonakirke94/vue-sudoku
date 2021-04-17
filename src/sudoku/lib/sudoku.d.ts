@@ -1,6 +1,4 @@
 /* eslint-disable camelcase */
-import Difficulty from '../enums/Difficulty';
-
 interface Sudoku {
 	generate(difficulty: string): string;
 	board_string_to_grid(board_string: string): [][];

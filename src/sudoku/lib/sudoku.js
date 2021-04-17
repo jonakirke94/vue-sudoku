@@ -670,8 +670,7 @@ function init(root) {
         display_string += H_BOX_PADDING;
       }
     }
-
-    console.log(display_string);
+    
   };
 
   sudoku.validate_board = function (board) {
