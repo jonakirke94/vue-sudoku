@@ -1,6 +1,6 @@
 import AbstractTileFactory from './factories/AbstractTileFactory';
 import Tile from './models/tiles/Tile';
-import Difficulty from './models/Difficulty';
+import Difficulty from './enums/Difficulty';
 
 import Sudoku from './lib/sudoku';
 import DefaultTileFactory from './factories/DefaultTileFactory';
@@ -23,8 +23,6 @@ class Game {
 
 	createBoard(tileValueCb: TileValueCallback, difficulty: Difficulty): Tile[][] {
 		const generatedGame = Sudoku.generate(Difficulty[difficulty]);
-
-		console.log(generatedGame, 'generatedGame');
 
 		const grid = Sudoku.board_string_to_grid(generatedGame);
 

@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts">
-import Difficulty from '@/sudoku/models/Difficulty';
+import Difficulty from '@/sudoku/enums/Difficulty';
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
 import Dropdown from './Dropdown.vue';

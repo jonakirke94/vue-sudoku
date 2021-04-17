@@ -1,53 +1,46 @@
 <template>
-	<div id="app" class="w-full flex justify-center">
+	<div id="app" class="w-full flex justify-center pb-20">
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
-			<div class="flex">
-				<div class="flex flex-col justify-center">
-					<div class="flex justify-between items-center">
-						<difficulty-dropdown :selected="difficulty" @selected="setDifficulty($event)"></difficulty-dropdown>
-						<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
-					</div>
-
-					<div class="flex flex-shrink-0">
-						<div class="relative grid grid-cols-9 grid-rows-9">
-							<!-- <board-overlay :paused="!running" @start="start"></board-overlay> -->
-							<game-tile
-								v-for="(tile, index) in tiles"
-								:class="[
-									{ 'rounded-tl-md': index === 0 },
-									{ 'rounded-tr-md': index === 8 },
-									{ 'rounded-bl-md': index === 72 },
-									{ 'rounded-br-md': index === 80 },
-								]"
-								@highlight="highlight"
-								:index="index + 1"
-								:is-highlighted="highlightedTiles.has(tile.id)"
-								:is-invalid="invalidTiles.has(tile.id)"
-								:key="tile.id"
-								:tile="tile"
-								:is-selected="selectedTileId === tile.id"
-							>
-							</game-tile>
-						</div>
-
-						<div class="flex flex-col ml-4">
-							<base-button @click="newGame(true)">Reset</base-button>
-							<base-button @click="newGame" class="mt-4">New Game</base-button>
-
-							<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
-							<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteValue" class="mt-4"
-								>Erase</base-button
-							>
-						</div>
+			<div class="flex justify-between items-center">
+				<difficulty-dropdown :selected="difficulty" @selected="setDifficulty($event)"></difficulty-dropdown>
+				<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
+			</div>
+			<div class="flex-col md:flex-row flex flex-shrink-0">
+				<div class="flex flex-col flex-shrink-0 md:flex-row">
+					<numpad-list @add="numpadClicked" :disabled="hasWon"></numpad-list>
+					<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4">
+						<board-overlay :paused="!running" @start="start"></board-overlay>
+						<game-tile
+							v-for="(tile, index) in tiles"
+							:class="[
+								{ 'rounded-tl-md': index === 0 },
+								{ 'rounded-tr-md': index === 8 },
+								{ 'rounded-bl-md': index === 72 },
+								{ 'rounded-br-md': index === 80 },
+							]"
+							@highlight="highlight"
+							:is-highlighted="highlightedTiles.has(tile.id)"
+							:is-invalid="invalidTiles.has(tile.id)"
+							:key="tile.id"
+							:tile="tile"
+							:is-selected="selectedTileId === tile.id"
+						>
+						</game-tile>
 					</div>
 				</div>
-			</div>
 
-			<ul class="flex space-x-1.5 mt-4">
-				<numpad v-for="x in 9" :key="x" :num="x" @click.native="numpadClicked(x)" :disabled="hasWon"></numpad>
-			</ul>
+				<div class="flex flex-shrink-0 justify-between md:mt-0 mt-4 md:flex-col">
+					<base-button @click="newGame(true)">Reset</base-button>
+					<base-button @click="newGame" class="md:mt-4">New Game</base-button>
+
+					<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
+					<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteValue" class="md:mt-4"
+						>Erase</base-button
+					>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -56,11 +49,11 @@
 import { Component, Vue } from 'vue-property-decorator';
 import Game from './sudoku/Game';
 
-import Numpad from './components/Numpad.vue';
+import NumpadList from './components/NumpadList.vue';
 import DifficultyDropdown from './components/DifficultyDropdown.vue';
 import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
-// import BoardOverlay from './components/BoardOverlay.vue';
+import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
 import Tile from './sudoku/models/tiles/Tile';
 import UnitGroup from './sudoku/models/UnitGroup';
@@ -69,15 +62,15 @@ import Command from './sudoku/Command';
 
 import Clock from './sudoku/models/Timer';
 
-import { SENTINEL } from './sudoku/constants';
-import Difficulty from './sudoku/models/Difficulty';
+import { SENTINEL } from './sudoku/Constants';
+import Difficulty from './sudoku/enums/Difficulty';
 import FrozenTile from './sudoku/models/tiles/FrozenTile';
 
 @Component({
 	components: {
-		Numpad,
+		NumpadList,
 		GameTile,
-		// BoardOverlay,
+		BoardOverlay,
 		Timer,
 		DifficultyDropdown,
 		BaseButton,
@@ -286,9 +279,5 @@ export default class App extends Vue {
 	text-align: center;
 	color: #2c3e50;
 	margin-top: 60px;
-}
-
-body {
-	overflow: hidden;
 }
 </style>

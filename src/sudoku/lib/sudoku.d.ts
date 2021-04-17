@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import Difficulty from '../models/Difficulty';
+import Difficulty from '../enums/Difficulty';
 
 interface Sudoku {
 	generate(difficulty: string): string;

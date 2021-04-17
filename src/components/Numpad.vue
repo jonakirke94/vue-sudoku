@@ -1,6 +1,7 @@
 <template>
 	<button
-		class="w-14 h-14 flex justify-center items-center rounded-md font-bold text-gray-700 border border-teal-600 bg-teal-50 focus:outline-none"
+		@click="$emit('click', num)"
+		class="w-12 h-12 md:w-12 md:h-12 xl:w-16 xl:h-16 flex justify-center items-center rounded-md font-bold text-gray-700 border border-teal-600 bg-teal-50 focus:outline-none"
 		:disabled="disabled"
 		:class="{ 'cursor-default': disabled }"
 	>

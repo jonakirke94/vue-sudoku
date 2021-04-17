@@ -2,7 +2,7 @@
 	<button
 		@click="$emit('click')"
 		:disabled="disabled"
-		class="w-32 h-14 rounded-md border transition-colors font-medium"
+		class="px-3 p-1 md:px-4 md:py-2 rounded-md border transition-colors font-medium"
 		:class="[
 			disabled
 				? 'cursor-default bg-gray-200 text-gray-900 border-gray-400'

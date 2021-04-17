@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { SENTINEL } from '../../constants';
+import { SENTINEL } from '../../Constants';
 import Coordinates from '../Coordinates';
 
 class Tile {

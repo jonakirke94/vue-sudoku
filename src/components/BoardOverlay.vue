@@ -1,20 +1,15 @@
 <template>
 	<div
-		class="grid grid-cols-3 border-gray-700 absolute inset-0 transition-all duration-100"
-		:class="[paused ? 'bg-white' : 'pointer-events-none']"
+		class="absolute inset-0 transition-all duration-300"
+		:class="[paused ? 'bg-gray-100 border border-gray-300 rounded-md' : 'pointer-events-none']"
 	>
-		<div
-			class="h-48 w-48 block flex-shrink-0 bg-transparent border-gray-700"
-			:class="[
-				paused ? 'blur-2xl opacity-80 border-transparent' : '',
-				{
-					'border-r': [1, 2, 4, 5, 7, 8].includes(x),
-					'border-b': x <= 6,
-				},
-			]"
-			v-for="x in 9"
-			:key="x"
-		></div>
+		<template v-if="!paused">
+			<div class="absolute h-full bg-gray-700" style="width: 2px; left: calc(33.3333% - 1px)"></div>
+			<div class="absolute h-full bg-gray-700" style="width: 2px; left: calc(66.6666% - 1px)"></div>
+
+			<div class="absolute w-full bg-gray-700" style="height: 2px; top: calc(33.3333% - 1px)"></div>
+			<div class="absolute w-full bg-gray-700" style="height: 2px; top: calc(66.6666% - 1px)"></div>
+		</template>
 
 		<svg
 			v-if="paused"
