@@ -1,4 +1,4 @@
-import Tile from './Tile';
+import Tile from './tiles/Tile';
 import Unit from './Unit';
 import ValidationResult from './ValidationResult';
 
@@ -16,7 +16,6 @@ export default class UnitGroup {
 	}
 
 	// we need to merge here or they will override each other
-	//
 	public validate(): Map<string, boolean> {
 		const map = new Map<string, boolean>();
 

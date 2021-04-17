@@ -1,13 +1,13 @@
 import AbstractTileFactory from './factories/AbstractTileFactory';
-import Tile from './models/Tile';
+import Tile from './models/tiles/Tile';
 import Difficulty from './models/Difficulty';
 
 import Sudoku from './lib/sudoku';
 import DefaultTileFactory from './factories/DefaultTileFactory';
 
 import TileValueCallback from './types/TileValueCallback';
-import Memento from './models/Memento';
-import Validator from './models/Validator';
+import Memento from './Memento';
+import Validator from './Validator';
 
 class Game {
 	tileFactory: AbstractTileFactory;
@@ -23,6 +23,8 @@ class Game {
 
 	createBoard(tileValueCb: TileValueCallback, difficulty: Difficulty): Tile[][] {
 		const generatedGame = Sudoku.generate(Difficulty[difficulty]);
+
+		console.log(generatedGame, 'generatedGame');
 
 		const grid = Sudoku.board_string_to_grid(generatedGame);
 
@@ -48,19 +50,6 @@ class Game {
 
 		return board;
 	}
-
-	/* public highlight(loc: Location): void {
-		this.unhighlightAll();
-
-		const rowUnit = this.board.getRow(loc);
-		rowUnit.highlightUnit();
-
-		const colRow = this.board.getCol(loc);
-		colRow.highlightUnit();
-
-		const squareUnit = this.board.getSquare(loc);
-		squareUnit.highlightUnit();
-	} */
 }
 
 export default Game;

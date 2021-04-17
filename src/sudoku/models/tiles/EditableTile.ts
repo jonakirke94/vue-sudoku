@@ -1,6 +1,6 @@
 import Tile from './Tile';
 
-import TileValueCallback from '../types/TileValueCallback';
+import TileValueCallback from '../../types/TileValueCallback';
 
 class EditableTile extends Tile {
 	valueChanged: TileValueCallback;

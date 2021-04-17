@@ -1,6 +1,6 @@
 // type CommandCallback = (id: string, value: number) => void;
 
-import EditableTile from './EditableTile';
+import EditableTile from './models/tiles/EditableTile';
 
 export default class Command {
 	tile: EditableTile;

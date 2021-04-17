@@ -12,7 +12,7 @@
 
 					<div class="flex flex-shrink-0">
 						<div class="relative grid grid-cols-9 grid-rows-9">
-							<board-overlay :paused="!running" @start="start"></board-overlay>
+							<!-- <board-overlay :paused="!running" @start="start"></board-overlay> -->
 							<game-tile
 								v-for="(tile, index) in tiles"
 								:class="[
@@ -22,6 +22,7 @@
 									{ 'rounded-br-md': index === 80 },
 								]"
 								@highlight="highlight"
+								:index="index + 1"
 								:is-highlighted="highlightedTiles.has(tile.id)"
 								:is-invalid="invalidTiles.has(tile.id)"
 								:key="tile.id"
@@ -32,11 +33,11 @@
 						</div>
 
 						<div class="flex flex-col ml-4">
-							<base-button @click="reset">Reset</base-button>
+							<base-button @click="newGame(true)">Reset</base-button>
 							<base-button @click="newGame" class="mt-4">New Game</base-button>
 
 							<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
-							<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteVal" class="mt-4"
+							<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteValue" class="mt-4"
 								>Erase</base-button
 							>
 						</div>
@@ -59,24 +60,24 @@ import Numpad from './components/Numpad.vue';
 import DifficultyDropdown from './components/DifficultyDropdown.vue';
 import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
-import BoardOverlay from './components/BoardOverlay.vue';
+// import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
-import Tile from './sudoku/models/Tile';
+import Tile from './sudoku/models/tiles/Tile';
 import UnitGroup from './sudoku/models/UnitGroup';
-import EditableTile from './sudoku/models/EditableTile';
-import Command from './sudoku/models/Command';
+import EditableTile from './sudoku/models/tiles/EditableTile';
+import Command from './sudoku/Command';
 
 import Clock from './sudoku/models/Timer';
 
 import { SENTINEL } from './sudoku/constants';
 import Difficulty from './sudoku/models/Difficulty';
-import FrozenTile from './sudoku/models/FrozenTile';
+import FrozenTile from './sudoku/models/tiles/FrozenTile';
 
 @Component({
 	components: {
 		Numpad,
 		GameTile,
-		BoardOverlay,
+		// BoardOverlay,
 		Timer,
 		DifficultyDropdown,
 		BaseButton,
@@ -222,8 +223,8 @@ export default class App extends Vue {
 
 		const tile = this.tilesMap.get(id);
 
-		if (tile?.value === val) {
-			// don't set same value
+		const isSameValue = tile?.value === val;
+		if (isSameValue) {
 			return;
 		}
 
@@ -240,7 +241,7 @@ export default class App extends Vue {
 		}
 	}
 
-	public deleteVal(): void {
+	public deleteValue(): void {
 		this.addValue(this.selectedTileId, SENTINEL);
 	}
 
@@ -259,26 +260,20 @@ export default class App extends Vue {
 		this.newGame();
 	}
 
-	public newGame(): void {
+	public newGame(isReset = false): void {
 		this.highlightedTiles = new Set();
 		this.invalidTiles = new Set();
 		this.selectedTileId = '';
 		this.gameHistory = [];
-		this.hasWon = false;
 		this.clock.dispose();
 		this.clock = new Clock(this.updateTimer);
-		this.board = this.game.createBoard(this.valueChangedCb, this.difficulty);
-	}
+		this.hasWon = false;
 
-	public reset(): void {
-		this.highlightedTiles = new Set();
-		this.invalidTiles = new Set();
-		this.selectedTileId = '';
-		this.gameHistory = [];
-		this.clock.dispose();
-		this.clock = new Clock(this.updateTimer);
-		this.hasWon = false;
-		this.board = this.game.memento.getSavedState();
+		if (isReset) {
+			this.board = this.game.memento.getSavedState();
+		} else {
+			this.board = this.game.createBoard(this.valueChangedCb, this.difficulty);
+		}
 	}
 }
 </script>

@@ -1,29 +1,29 @@
 import { v4 as uuidv4 } from 'uuid';
-import Location from './Location';
 
-import { SENTINEL } from '../constants';
+import { SENTINEL } from '../../constants';
+import Coordinates from '../Coordinates';
 
 class Tile {
 	id: string;
 
 	protected _value: number;
 
-	row: number;
+	x: number;
 
-	col: number;
+	y: number;
 
-	location: Location;
+	coordinates: Coordinates;
 
 	get value(): number {
 		return this._value;
 	}
 
-	constructor(col: number, row: number, value = SENTINEL) {
+	constructor(x: number, y: number, value = SENTINEL) {
 		this.id = uuidv4();
 		this._value = value;
-		this.row = row;
-		this.col = col;
-		this.location = new Location(row, col);
+		this.x = x;
+		this.y = y;
+		this.coordinates = new Coordinates(x, y);
 	}
 
 	get hasValue(): boolean {

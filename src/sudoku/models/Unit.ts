@@ -1,4 +1,4 @@
-import Tile from './Tile';
+import Tile from './tiles/Tile';
 import ValidationResult from './ValidationResult';
 
 class Unit {
