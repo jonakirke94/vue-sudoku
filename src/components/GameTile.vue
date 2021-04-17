@@ -1,11 +1,11 @@
 <template>
 	<div
-		class="border border-gray-300 text-xl w-12 h-12 md:w-12 md:h-12 xl:w-16 xl:h-16 flex justify-center items-center"
+		class="border border-gray-300 text-xl w-10 h-10 md:w-12 md:h-12 xl:w-16 xl:h-16 flex justify-center items-center"
 		@click.stop="highlightTile"
 		:class="[
 			isFrozen ? 'text-teal-900' : 'text-gray-500',
 			{ 'bg-teal-100': isSelected },
-			isHighlighted ? 'bg-gray-200' : 'bg-gray-100',
+			isHighlighted ? 'bg-gray-100' : 'bg-gray-50',
 		]"
 	>
 		<span v-if="tile.value > 0" :class="{ 'text-red-500': isInvalid }">{{ tile.value }}</span>

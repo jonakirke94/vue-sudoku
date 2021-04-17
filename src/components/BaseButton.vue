@@ -5,8 +5,8 @@
 		class="px-3 p-1 md:px-4 md:py-2 rounded-md border transition-colors font-medium"
 		:class="[
 			disabled
-				? 'cursor-default bg-gray-200 text-gray-900 border-gray-400'
-				: 'border-gray-900 text-gray-700 hover:bg-gray-100 shadow',
+				? 'cursor-default bg-gray-100 text-gray-900 border-gray-300'
+				: 'border-gray-300 text-gray-700 hover:bg-gray-100 shadow',
 		]"
 	>
 		<slot />
