@@ -1,5 +1,5 @@
 <template>
-	<div id="app" class="w-full flex justify-center pb-20">
+	<div id="app" class="w-full flex justify-center pb-20" v-fireworks="hasWon">
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
 
@@ -10,7 +10,7 @@
 			<div class="flex-col md:flex-row flex flex-shrink-0">
 				<div class="flex flex-col flex-shrink-0 md:flex-row">
 					<numpad-list @add="numpadClicked" :disabled="hasWon"></numpad-list>
-					<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4">
+					<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4" id="board">
 						<board-overlay :paused="!running" @start="start"></board-overlay>
 						<game-tile
 							v-for="(tile, index) in tiles"
@@ -55,14 +55,15 @@ import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
 import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
-import Tile from './sudoku/models/Tile';
+
 import UnitGroup from './sudoku/models/UnitGroup';
-import Command from './sudoku/Command';
-
+import Tile from './sudoku/models/Tile';
 import Clock from './sudoku/models/Timer';
-
+import Command from './sudoku/Command';
 import { SENTINEL } from './sudoku/Constants';
 import Difficulty from './sudoku/enums/Difficulty';
+
+import Fireworks from './directives/Fireworks';
 
 @Component({
 	components: {
@@ -72,6 +73,9 @@ import Difficulty from './sudoku/enums/Difficulty';
 		Timer,
 		DifficultyDropdown,
 		BaseButton,
+	},
+	directives: {
+		Fireworks,
 	},
 })
 export default class App extends Vue {
@@ -175,11 +179,6 @@ export default class App extends Vue {
 		if (hasWon) {
 			this.clock.destroy();
 			this.hasWon = true;
-
-			setTimeout(() => {
-				// eslint-disable-next-line no-alert
-				alert('Tillykke!');
-			}, 200);
 		}
 	}
 
