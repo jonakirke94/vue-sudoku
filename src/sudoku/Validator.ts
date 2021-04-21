@@ -14,6 +14,10 @@ export default class Validator {
 		return new UnitGroup(rowUnit, colUnit, squareUnit);
 	}
 
+	public hasWon(tiles: Tile[], invalidTiles: Set<string>): boolean {
+		return tiles.every((tile) => tile.hasValue) && invalidTiles.size === 0;
+	}
+
 	private getRow(board: Tile[][], coords: Coordinates): Unit {
 		return new Unit(board[coords.x]);
 	}

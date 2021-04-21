@@ -9,7 +9,7 @@ class Tile {
 
 	protected _value: number;
 
-	protected isFrozen: boolean;
+	isFrozen: boolean;
 
 	valueChanged: TileValueCallback;
 

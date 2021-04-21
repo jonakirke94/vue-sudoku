@@ -2,9 +2,8 @@
 	<div id="app" class="w-full flex justify-center pb-20" v-fireworks="hasWon">
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
-
 			<div class="flex justify-between items-center">
-				<difficulty-dropdown :selected="difficulty" @selected="setDifficulty($event)"></difficulty-dropdown>
+				<difficulty-dropdown :selected="difficulty" @selected="difficulty = $event"></difficulty-dropdown>
 				<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
 			</div>
 			<div class="flex-col md:flex-row flex flex-shrink-0">
@@ -30,7 +29,6 @@
 						</game-tile>
 					</div>
 				</div>
-
 				<div class="flex flex-shrink-0 justify-between md:mt-0 mt-4 md:flex-col">
 					<base-button @click="newGame(true)">Reset</base-button>
 					<base-button @click="newGame" class="md:mt-4">New Game</base-button>
@@ -46,7 +44,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Watch } from 'vue-property-decorator';
 import Game from './sudoku/Game';
 
 import NumpadList from './components/NumpadList.vue';
@@ -64,6 +62,8 @@ import { SENTINEL } from './sudoku/Constants';
 import Difficulty from './sudoku/enums/Difficulty';
 
 import Fireworks from './directives/Fireworks';
+
+import mergeMapWithSet from './sudoku/helpers/Merge';
 
 @Component({
 	components: {
@@ -101,11 +101,11 @@ export default class App extends Vue {
 
 	private difficulty = Difficulty.inhuman;
 
-	created(): void {
-		this.game = new Game();
-		this.board = this.game.createBoard(this.valueChangedCb, this.difficulty);
-
-		this.clock = new Clock(this.updateTimer);
+	@Watch('difficulty', {
+		immediate: true,
+	})
+	difficultyChanged(): void {
+		this.newGame();
 	}
 
 	public updateTimer(value: string): void {
@@ -114,6 +114,14 @@ export default class App extends Vue {
 
 	mounted(): void {
 		window.addEventListener('keypress', this.captureKey);
+	}
+
+	public captureKey(e: KeyboardEvent): void {
+		if (/^[1-9]$/i.test(e.key)) {
+			if (this.selectedTileId) {
+				this.addValue(this.selectedTileId, Number(e.key));
+			}
+		}
 	}
 
 	beforeDestroyed(): void {
@@ -136,10 +144,7 @@ export default class App extends Vue {
 	get currentTileHasValue(): boolean {
 		if (this.selectedTileId && this.tilesMap.has(this.selectedTileId)) {
 			const tile = this.tilesMap.get(this.selectedTileId);
-
-			if (!tile) return false;
-
-			return tile.hasValue;
+			return tile!.hasValue;
 		}
 
 		return false;
@@ -156,25 +161,14 @@ export default class App extends Vue {
 	public valueChangedCb(tile: Tile): void {
 		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
 
-		const invalidRows = unitGroup.validate();
+		const validatedTiles = unitGroup.validate();
 
-		// merge with invalid tiles
-		for (const key of invalidRows.keys()) {
-			if (invalidRows.get(key)) {
-				this.invalidTiles.delete(key);
-			} else {
-				this.invalidTiles.add(key);
-			}
-		}
-
-		// we need to do this because vue2 doesn't have reactivity on sets/maps
-		this.invalidTiles = new Set(this.invalidTiles);
-
+		this.invalidTiles = mergeMapWithSet(this.invalidTiles, validatedTiles);
 		this.checkIfWon();
 	}
 
 	public checkIfWon(): void {
-		const hasWon = this.tiles.every((tile) => tile.hasValue) && this.invalidTiles.size === 0;
+		const hasWon = this.game.validator.hasWon(this.tiles, this.invalidTiles);
 
 		if (hasWon) {
 			this.clock.destroy();
@@ -199,14 +193,6 @@ export default class App extends Vue {
 		this.selectedTileId = tile.id;
 	}
 
-	public captureKey(e: KeyboardEvent): void {
-		if (/^[1-9]$/i.test(e.key)) {
-			if (this.selectedTileId) {
-				this.addValue(this.selectedTileId, Number(e.key));
-			}
-		}
-	}
-
 	public addValue(id: string, val: number): void {
 		if (this.hasWon) {
 			return;
@@ -215,7 +201,7 @@ export default class App extends Vue {
 		const tile = this.tilesMap.get(id);
 
 		const isSameValue = tile?.value === val;
-		if (isSameValue || !tile) {
+		if (isSameValue || !tile || tile.isFrozen) {
 			return;
 		}
 
@@ -244,25 +230,24 @@ export default class App extends Vue {
 		this.running = false;
 	}
 
-	setDifficulty(diff: Difficulty): void {
-		this.difficulty = diff;
-		this.newGame();
-	}
-
 	public newGame(isReset = false): void {
-		this.highlightedTiles = new Set();
-		this.invalidTiles = new Set();
-		this.selectedTileId = '';
-		this.gameHistory = [];
-		this.clock.destroy();
-		this.clock = new Clock(this.updateTimer);
-		this.hasWon = false;
+		if (this.clock) {
+			this.clock.destroy();
+		}
 
 		if (isReset) {
 			this.board = this.game.memento.getSavedState();
 		} else {
+			this.game = new Game();
 			this.board = this.game.createBoard(this.valueChangedCb, this.difficulty);
 		}
+
+		this.clock = new Clock(this.updateTimer);
+		this.highlightedTiles = new Set();
+		this.invalidTiles = new Set();
+		this.selectedTileId = '';
+		this.gameHistory = [];
+		this.hasWon = false;
 	}
 }
 </script>
