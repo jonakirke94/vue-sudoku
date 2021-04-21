@@ -1,15 +1,13 @@
-// type CommandCallback = (id: string, value: number) => void;
-
-import EditableTile from './models/tiles/EditableTile';
+import Tile from './models/Tile';
 
 export default class Command {
-	tile: EditableTile;
+	tile: Tile;
 
 	newVal: number;
 
 	oldVal: number;
 
-	constructor(tile: EditableTile, newVal: number, oldVal: number) {
+	constructor(tile: Tile, newVal: number, oldVal: number) {
 		this.newVal = newVal;
 		this.oldVal = oldVal;
 		this.tile = tile;

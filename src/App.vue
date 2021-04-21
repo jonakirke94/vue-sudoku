@@ -55,16 +55,14 @@ import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
 import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
-import Tile from './sudoku/models/tiles/Tile';
+import Tile from './sudoku/models/Tile';
 import UnitGroup from './sudoku/models/UnitGroup';
-import EditableTile from './sudoku/models/tiles/EditableTile';
 import Command from './sudoku/Command';
 
 import Clock from './sudoku/models/Timer';
 
 import { SENTINEL } from './sudoku/Constants';
 import Difficulty from './sudoku/enums/Difficulty';
-import FrozenTile from './sudoku/models/tiles/FrozenTile';
 
 @Component({
 	components: {
@@ -106,8 +104,8 @@ export default class App extends Vue {
 		this.clock = new Clock(this.updateTimer);
 	}
 
-	public updateTimer(evt: any): void {
-		this.time = (evt as CustomEvent).detail;
+	public updateTimer(value: string): void {
+		this.time = value;
 	}
 
 	mounted(): void {
@@ -135,7 +133,7 @@ export default class App extends Vue {
 		if (this.selectedTileId && this.tilesMap.has(this.selectedTileId)) {
 			const tile = this.tilesMap.get(this.selectedTileId);
 
-			if (!tile || tile instanceof FrozenTile) return false;
+			if (!tile) return false;
 
 			return tile.hasValue;
 		}
@@ -175,7 +173,7 @@ export default class App extends Vue {
 		const hasWon = this.tiles.every((tile) => tile.hasValue) && this.invalidTiles.size === 0;
 
 		if (hasWon) {
-			this.clock.dispose();
+			this.clock.destroy();
 			this.hasWon = true;
 
 			setTimeout(() => {
@@ -218,15 +216,13 @@ export default class App extends Vue {
 		const tile = this.tilesMap.get(id);
 
 		const isSameValue = tile?.value === val;
-		if (isSameValue) {
+		if (isSameValue || !tile) {
 			return;
 		}
 
-		if (tile instanceof EditableTile) {
-			const command = new Command(tile, val, tile.value);
-			this.gameHistory.push(command);
-			command.execute();
-		}
+		const command = new Command(tile, val, tile.value);
+		this.gameHistory.push(command);
+		command.execute();
 	}
 
 	public numpadClicked(val: number): void {
@@ -259,7 +255,7 @@ export default class App extends Vue {
 		this.invalidTiles = new Set();
 		this.selectedTileId = '';
 		this.gameHistory = [];
-		this.clock.dispose();
+		this.clock.destroy();
 		this.clock = new Clock(this.updateTimer);
 		this.hasWon = false;
 

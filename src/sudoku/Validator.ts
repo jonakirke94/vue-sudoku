@@ -1,4 +1,4 @@
-import Tile from './models/tiles/Tile';
+import Tile from './models/Tile';
 import Unit from './models/Unit';
 import UnitGroup from './models/UnitGroup';
 import Coordinates from './models/Coordinates';

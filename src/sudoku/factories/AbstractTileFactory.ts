@@ -1,11 +1,9 @@
-import Tile from '../models/tiles/Tile';
+import Tile from '../models/Tile';
 
 import TileValueCallback from '../types/TileValueCallback';
 
 interface AbstractTileFactory {
-	createEditableTile(x: number, y: number, cb: TileValueCallback): Tile;
-
-	createFrozenTile(x: number, y: number, value: number): Tile;
+	createTile(x: number, y: number, value: number, cb: TileValueCallback): Tile;
 }
 
 export default AbstractTileFactory;

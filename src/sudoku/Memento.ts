@@ -2,7 +2,7 @@
 import cloneDeep from 'lodash.clonedeep';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Tile from './models/tiles/Tile';
+import Tile from './models/Tile';
 
 export default class Memento {
 	state: Tile[][] = [];

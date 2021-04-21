@@ -1,13 +1,12 @@
 import AbstractTileFactory from './factories/AbstractTileFactory';
-import Tile from './models/tiles/Tile';
+import Tile from './models/Tile';
 import Difficulty from './enums/Difficulty';
-
 import Sudoku from './lib/sudoku';
 import DefaultTileFactory from './factories/DefaultTileFactory';
-
 import TileValueCallback from './types/TileValueCallback';
 import Memento from './Memento';
 import Validator from './Validator';
+import { SENTINEL } from './Constants';
 
 class Game {
 	tileFactory: AbstractTileFactory;
@@ -31,13 +30,8 @@ class Game {
 		grid.forEach((col, i) => {
 			const intRow: Tile[] = [];
 			col.forEach((row, j) => {
-				let tile: Tile;
-				if (row === '.') {
-					tile = this.tileFactory.createEditableTile(i, j, tileValueCb);
-				} else {
-					tile = this.tileFactory.createFrozenTile(i, j, Number(row));
-				}
-
+				const value = row === '.' ? SENTINEL : Number(row);
+				const tile = this.tileFactory.createTile(i, j, value, tileValueCb);
 				intRow.push(tile);
 			});
 

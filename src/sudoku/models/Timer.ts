@@ -1,8 +1,6 @@
-import MyEventEmitter from '../EventEmitter';
-import IDisposable from '../interfaces/IDisposable';
 import TimerUpdateCallback from '../types/UpdateClockCallback';
 
-export default class Timer extends MyEventEmitter implements IDisposable {
+export default class Timer {
 	private timerFunction: ReturnType<typeof setInterval>;
 
 	private startTime: number;
@@ -14,12 +12,7 @@ export default class Timer extends MyEventEmitter implements IDisposable {
 	private updateCallbackFunc: TimerUpdateCallback;
 
 	constructor(updateCallback: TimerUpdateCallback) {
-		super();
-
 		this.updateCallbackFunc = updateCallback;
-
-		this.on('tick', updateCallback);
-
 		this.start();
 	}
 
@@ -27,7 +20,7 @@ export default class Timer extends MyEventEmitter implements IDisposable {
 		this.startTime = Date.now();
 		this.timerFunction = setInterval(() => {
 			this.intrementor();
-		}, 300);
+		}, 100);
 	}
 
 	public pause(): void {
@@ -35,7 +28,11 @@ export default class Timer extends MyEventEmitter implements IDisposable {
 		this.pausedSeconds = this.elapsedSeconds;
 	}
 
-	public format(num: number): string {
+	public destroy(): void {
+		clearInterval(this.timerFunction);
+	}
+
+	private format(num: number): string {
 		let minutes: number | string = Math.floor(num / 60);
 		let seconds: number | string = num % 60;
 
@@ -56,10 +53,6 @@ export default class Timer extends MyEventEmitter implements IDisposable {
 		this.elapsedSeconds = Math.floor(delta / 1000) + this.pausedSeconds;
 
 		const formatted = this.format(this.elapsedSeconds);
-		this.emit('tick', formatted);
-	}
-
-	public dispose(): void {
-		this.off('tick', this.updateCallbackFunc);
+		this.updateCallbackFunc(formatted);
 	}
 }
