@@ -214,5 +214,3 @@ export default class Board extends Vue {
 	}
 }
 </script>
-
-function h(arg0: string, arg1: ScopedSlotChildren): any { throw new Error('Function not implemented.'); }
