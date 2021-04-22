@@ -8,7 +8,7 @@
 			</div>
 			<div class="flex-col md:flex-row flex flex-shrink-0">
 				<div class="flex flex-col flex-shrink-0 md:flex-row">
-					<numpad-list @add="numpadClicked" :disabled="hasWon"></numpad-list>
+					<numpad-list @add="addValue(selectedIndex, $event)" :disabled="hasWon"></numpad-list>
 					<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4" id="board">
 						<board-overlay :paused="!running" @start="start"></board-overlay>
 						<game-tile
@@ -19,12 +19,12 @@
 								{ 'rounded-bl-md': index === 72 },
 								{ 'rounded-br-md': index === 80 },
 							]"
-							@highlight="highlight"
+							@highlight="highlight($event, index)"
 							:is-highlighted="highlightedTiles.has(tile.id)"
 							:is-invalid="invalidTiles.has(tile.id)"
 							:key="tile.id"
 							:tile="tile"
-							:is-selected="selectedTileId === tile.id"
+							:is-selected="selectedIndex === index"
 						>
 						</game-tile>
 					</div>
@@ -34,7 +34,10 @@
 					<base-button @click="newGame" class="md:mt-4">New Game</base-button>
 
 					<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
-					<base-button :disabled="hasWon || !currentTileHasValue" @click="deleteValue" class="md:mt-4"
+					<base-button
+						:disabled="hasWon || !currentTileHasValue"
+						@click="addValue(selectedIndex, SENTINEL)"
+						class="md:mt-4"
 						>Erase</base-button
 					>
 				</div>
@@ -87,7 +90,7 @@ export default class App extends Vue {
 
 	private invalidTiles: Set<string> = new Set();
 
-	private selectedTileId = '';
+	private selectedIndex = -1;
 
 	private gameHistory: Command[] = [];
 
@@ -101,53 +104,30 @@ export default class App extends Vue {
 
 	private difficulty = Difficulty.inhuman;
 
-	@Watch('difficulty', {
-		immediate: true,
-	})
-	difficultyChanged(): void {
-		this.newGame();
-	}
-
-	public updateTimer(value: string): void {
-		this.time = value;
-	}
+	private SENTINEL = SENTINEL;
 
 	mounted(): void {
 		window.addEventListener('keypress', this.captureKey);
-	}
-
-	public captureKey(e: KeyboardEvent): void {
-		if (/^[1-9]$/i.test(e.key)) {
-			if (this.selectedTileId) {
-				this.addValue(this.selectedTileId, Number(e.key));
-			}
-		}
-	}
-
-	beforeDestroyed(): void {
-		window.removeEventListener('keypress', this.captureKey);
 	}
 
 	get tiles(): Tile[] {
 		return this.board.flat();
 	}
 
-	get tilesMap(): Map<string, Tile> {
-		const map = new Map<string, Tile>();
-		this.board.flat().forEach((tile) => {
-			map.set(tile.id, tile);
-		});
-
-		return map;
-	}
-
 	get currentTileHasValue(): boolean {
-		if (this.selectedTileId && this.tilesMap.has(this.selectedTileId)) {
-			const tile = this.tilesMap.get(this.selectedTileId);
-			return tile!.hasValue;
+		if (this.selectedIndex > -1) {
+			return this.tiles[this.selectedIndex].hasValue;
 		}
 
 		return false;
+	}
+
+	public captureKey(e: KeyboardEvent): void {
+		if (/^[1-9]$/i.test(e.key)) {
+			if (this.selectedIndex > -1) {
+				this.addValue(this.selectedIndex, Number(e.key));
+			}
+		}
 	}
 
 	public undo(): void {
@@ -176,10 +156,10 @@ export default class App extends Vue {
 		}
 	}
 
-	public highlight(tile: Tile): void {
-		if (this.selectedTileId === tile.id) {
+	public highlight(tile: Tile, index: number): void {
+		if (this.selectedIndex === index) {
 			this.highlightedTiles = new Set();
-			this.selectedTileId = '';
+			this.selectedIndex = -1;
 			return;
 		}
 
@@ -190,34 +170,23 @@ export default class App extends Vue {
 		const toHighlight = [...sameNumbers.map((x) => x.id), ...unitGroup.tiles.map((x) => x.id)];
 
 		this.highlightedTiles = new Set(toHighlight);
-		this.selectedTileId = tile.id;
+		this.selectedIndex = index;
 	}
 
-	public addValue(id: string, val: number): void {
-		if (this.hasWon) {
+	public addValue(index: number, val: number): void {
+		if (this.hasWon || index < 0) {
 			return;
 		}
 
-		const tile = this.tilesMap.get(id);
+		const tile = this.tiles[index];
 
-		const isSameValue = tile?.value === val;
-		if (isSameValue || !tile || tile.isFrozen) {
+		if (tile.value === val || tile.isFrozen) {
 			return;
 		}
 
 		const command = new Command(tile, val, tile.value);
 		this.gameHistory.push(command);
 		command.execute();
-	}
-
-	public numpadClicked(val: number): void {
-		if (this.selectedTileId) {
-			this.addValue(this.selectedTileId, val);
-		}
-	}
-
-	public deleteValue(): void {
-		this.addValue(this.selectedTileId, SENTINEL);
 	}
 
 	public start(): void {
@@ -228,6 +197,10 @@ export default class App extends Vue {
 	public pause(): void {
 		this.clock.pause();
 		this.running = false;
+	}
+
+	public updateTimer(value: string): void {
+		this.time = value;
 	}
 
 	public newGame(isReset = false): void {
@@ -245,9 +218,20 @@ export default class App extends Vue {
 		this.clock = new Clock(this.updateTimer);
 		this.highlightedTiles = new Set();
 		this.invalidTiles = new Set();
-		this.selectedTileId = '';
+		this.selectedIndex = -1;
 		this.gameHistory = [];
 		this.hasWon = false;
+	}
+
+	@Watch('difficulty', {
+		immediate: true,
+	})
+	difficultyChanged(): void {
+		this.newGame();
+	}
+
+	beforeDestroyed(): void {
+		window.removeEventListener('keypress', this.captureKey);
 	}
 }
 </script>
