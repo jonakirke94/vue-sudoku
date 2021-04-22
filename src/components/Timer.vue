@@ -1,6 +1,6 @@
 <template>
 	<div class="flex items-center py-4">
-		<span class="mr-2 text-gray-600">{{ time }}</span>
+		<span class="mr-2 text-gray-600"><slot /></span>
 
 		<span class="text-gray-600 cursor-pointer">
 			<svg
@@ -55,7 +55,5 @@ export default class Timer extends Vue {
 		default: false,
 	})
 	private running: boolean;
-
-	@Prop({ default: '00:00' }) readonly time: string;
 }
 </script>

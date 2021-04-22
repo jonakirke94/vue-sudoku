@@ -1,239 +1,83 @@
 <template>
-	<div id="app" class="w-full flex justify-center pb-20" v-fireworks="hasWon">
+	<div id="app" class="w-full flex justify-center pb-20">
 		<div class="flex flex-col justify-between max-w-screen-md">
 			<h1 class="text-3xl text-gray-700">Sudoku</h1>
-			<div class="flex justify-between items-center">
-				<difficulty-dropdown :selected="difficulty" @selected="difficulty = $event"></difficulty-dropdown>
-				<timer :running="running" @pause="pause" @start="start" :time="time"></timer>
-			</div>
-			<div class="flex-col md:flex-row flex flex-shrink-0">
-				<div class="flex flex-col flex-shrink-0 md:flex-row">
-					<numpad-list @add="addValue(selectedIndex, $event)" :disabled="hasWon"></numpad-list>
-					<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4" id="board">
-						<board-overlay :paused="!running" @start="start"></board-overlay>
-						<game-tile
-							v-for="(tile, index) in tiles"
-							:class="[
-								{ 'rounded-tl-md': index === 0 },
-								{ 'rounded-tr-md': index === 8 },
-								{ 'rounded-bl-md': index === 72 },
-								{ 'rounded-br-md': index === 80 },
-							]"
-							@highlight="highlight($event, index)"
-							:is-highlighted="highlightedTiles.has(tile.id)"
-							:is-invalid="invalidTiles.has(tile.id)"
-							:key="tile.id"
-							:tile="tile"
-							:is-selected="selectedIndex === index"
-						>
-						</game-tile>
+			<board>
+				<template
+					#default="{
+						clock: { running, onPause, onStart, time },
+						controls: { onUndo, onErase, onNewGame, onReset, undoDisabled, eraseDisabled },
+						game: { tiles, selectedIndex, hasWon, highlightedTiles, invalidTiles, onHighlight },
+						onSetDifficulty,
+						onNumpadInput,
+						difficulty,
+					}"
+				>
+					<div class="flex justify-between items-center">
+						<difficulty-dropdown :selected="difficulty" @selected="onSetDifficulty"></difficulty-dropdown>
+						<timer :running="running" @pause="onPause" @start="onStart">{{ time }}</timer>
 					</div>
-				</div>
-				<div class="flex flex-shrink-0 justify-between md:mt-0 mt-4 md:flex-col">
-					<base-button @click="newGame(true)">Reset</base-button>
-					<base-button @click="newGame" class="md:mt-4">New Game</base-button>
-
-					<base-button :disabled="!gameHistory.length || hasWon" @click="undo" class="mt-auto">Undo</base-button>
-					<base-button
-						:disabled="hasWon || !currentTileHasValue"
-						@click="addValue(selectedIndex, SENTINEL)"
-						class="md:mt-4"
-						>Erase</base-button
-					>
-				</div>
-			</div>
+					<div class="flex-col md:flex-row flex flex-shrink-0">
+						<div class="flex flex-col flex-shrink-0 md:flex-row">
+							<numpad-list @add="onNumpadInput(selectedIndex, $event)" :disabled="hasWon"></numpad-list>
+							<div class="relative grid grid-cols-9 grid-rows-9 flex-shrink-0 mx-0 md:mx-4" id="board">
+								<board-overlay :paused="!running" @start="onStart"></board-overlay>
+								<game-tile
+									v-for="(tile, index) in tiles"
+									:class="[
+										{ 'rounded-tl-md': index === 0 },
+										{ 'rounded-tr-md': index === 8 },
+										{ 'rounded-bl-md': index === 72 },
+										{ 'rounded-br-md': index === 80 },
+									]"
+									@highlight="onHighlight($event, index)"
+									:is-highlighted="highlightedTiles.has(tile.id)"
+									:is-invalid="invalidTiles.has(tile.id)"
+									:key="tile.id"
+									:tile="tile"
+									:is-selected="selectedIndex === index"
+								>
+								</game-tile>
+							</div>
+						</div>
+						<game-controls
+							@undo="onUndo"
+							@erase="onErase"
+							@reset="onReset"
+							@new-game="onNewGame"
+							:undo-disabled="undoDisabled"
+							:erase-disabled="eraseDisabled"
+						></game-controls>
+					</div>
+				</template>
+			</board>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator';
-import Game from './sudoku/Game';
+import { Component, Vue } from 'vue-property-decorator';
 
 import NumpadList from './components/NumpadList.vue';
 import DifficultyDropdown from './components/DifficultyDropdown.vue';
-import BaseButton from './components/BaseButton.vue';
 import GameTile from './components/GameTile.vue';
 import BoardOverlay from './components/BoardOverlay.vue';
 import Timer from './components/Timer.vue';
-
-import UnitGroup from './sudoku/models/UnitGroup';
-import Tile from './sudoku/models/Tile';
-import Clock from './sudoku/models/Timer';
-import Command from './sudoku/Command';
-import { SENTINEL } from './sudoku/Constants';
-import Difficulty from './sudoku/enums/Difficulty';
-
-import Fireworks from './directives/Fireworks';
-
-import mergeMapWithSet from './sudoku/helpers/Merge';
+import GameControls from './components/GameControls.vue';
+import Board from './components/Board.vue';
 
 @Component({
 	components: {
 		NumpadList,
 		GameTile,
 		BoardOverlay,
+		Board,
 		Timer,
 		DifficultyDropdown,
-		BaseButton,
-	},
-	directives: {
-		Fireworks,
+		GameControls,
 	},
 })
-export default class App extends Vue {
-	private game!: Game;
-
-	private board: Tile[][] = [];
-
-	private highlightedTiles: Set<string> = new Set();
-
-	private invalidTiles: Set<string> = new Set();
-
-	private selectedIndex = -1;
-
-	private gameHistory: Command[] = [];
-
-	private clock: Clock;
-
-	private running = true;
-
-	private hasWon = false;
-
-	private time = '00:00';
-
-	private difficulty = Difficulty.inhuman;
-
-	private SENTINEL = SENTINEL;
-
-	mounted(): void {
-		window.addEventListener('keypress', this.captureKey);
-	}
-
-	get tiles(): Tile[] {
-		return this.board.flat();
-	}
-
-	get currentTileHasValue(): boolean {
-		if (this.selectedIndex > -1) {
-			return this.tiles[this.selectedIndex].hasValue;
-		}
-
-		return false;
-	}
-
-	public captureKey(e: KeyboardEvent): void {
-		if (/^[1-9]$/i.test(e.key)) {
-			if (this.selectedIndex > -1) {
-				this.addValue(this.selectedIndex, Number(e.key));
-			}
-		}
-	}
-
-	public undo(): void {
-		const command = this.gameHistory.pop();
-
-		if (command) {
-			command.revert();
-		}
-	}
-
-	public valueChangedCb(tile: Tile): void {
-		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
-
-		const validatedTiles = unitGroup.validate();
-
-		this.invalidTiles = mergeMapWithSet(this.invalidTiles, validatedTiles);
-		this.checkIfWon();
-	}
-
-	public checkIfWon(): void {
-		const hasWon = this.game.validator.hasWon(this.tiles, this.invalidTiles);
-
-		if (hasWon) {
-			this.clock.destroy();
-			this.hasWon = true;
-		}
-	}
-
-	public highlight(tile: Tile, index: number): void {
-		if (this.selectedIndex === index) {
-			this.highlightedTiles = new Set();
-			this.selectedIndex = -1;
-			return;
-		}
-
-		const unitGroup: UnitGroup = this.game.validator.clicked(this.board, tile);
-
-		const sameNumbers = this.tiles.filter((t) => t.value === tile.value && tile.hasValue);
-
-		const toHighlight = [...sameNumbers.map((x) => x.id), ...unitGroup.tiles.map((x) => x.id)];
-
-		this.highlightedTiles = new Set(toHighlight);
-		this.selectedIndex = index;
-	}
-
-	public addValue(index: number, val: number): void {
-		if (this.hasWon || index < 0) {
-			return;
-		}
-
-		const tile = this.tiles[index];
-
-		if (tile.value === val || tile.isFrozen) {
-			return;
-		}
-
-		const command = new Command(tile, val, tile.value);
-		this.gameHistory.push(command);
-		command.execute();
-	}
-
-	public start(): void {
-		this.running = true;
-		this.clock.start();
-	}
-
-	public pause(): void {
-		this.clock.pause();
-		this.running = false;
-	}
-
-	public updateTimer(value: string): void {
-		this.time = value;
-	}
-
-	public newGame(isReset = false): void {
-		if (this.clock) {
-			this.clock.destroy();
-		}
-
-		if (isReset) {
-			this.board = this.game.memento.getSavedState();
-		} else {
-			this.game = new Game();
-			this.board = this.game.createBoard(this.valueChangedCb, this.difficulty);
-		}
-
-		this.clock = new Clock(this.updateTimer);
-		this.highlightedTiles = new Set();
-		this.invalidTiles = new Set();
-		this.selectedIndex = -1;
-		this.gameHistory = [];
-		this.hasWon = false;
-	}
-
-	@Watch('difficulty', {
-		immediate: true,
-	})
-	difficultyChanged(): void {
-		this.newGame();
-	}
-
-	beforeDestroyed(): void {
-		window.removeEventListener('keypress', this.captureKey);
-	}
-}
+export default class App extends Vue {}
 </script>
 
 <style>
